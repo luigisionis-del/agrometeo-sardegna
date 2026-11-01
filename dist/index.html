@@ -1,0 +1,267 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Agrometeo Sardegna</title>
+  <link rel="stylesheet" href="vendor/leaflet/leaflet.css">
+  <link rel="stylesheet" href="css/app.css">
+  <script src="vendor/leaflet/leaflet.js"></script>
+  <script src="vendor/chart.umd.js"></script>
+  <script type="module" src="js/main.js"></script>
+</head>
+<body>
+  <header class="testata">
+    <div class="riga-testata">
+      <div class="marchio">
+        <img src="img/logo.svg" alt="" width="36" height="36">
+        <div>
+          <h1>Agrometeo Sardegna</h1>
+          <p class="sottotitolo">Supporto alle decisioni agrometeorologiche</p>
+        </div>
+      </div>
+
+      <div class="selettore-luogo">
+        <select id="luoghi" aria-label="Località"></select>
+        <div class="ricerca">
+          <input id="ricerca" type="search" placeholder="Cerca comune o coordinate (39.86, 9.23)" autocomplete="off" aria-label="Cerca località">
+          <ul id="risultati" class="risultati" hidden></ul>
+        </div>
+        <button id="salva-luogo" class="pulsante secondario icona" title="Aggiungi la località attiva ai preset" aria-label="Salva località">★</button>
+        <button id="rimuovi-luogo" class="pulsante secondario icona" title="Rimuovi il preset selezionato" aria-label="Rimuovi località">✕</button>
+      </div>
+
+      <div class="stato-dati">
+        <span id="badge-dati" class="badge">—</span>
+        <span id="orologio" class="orologio">--:--</span>
+        <button id="aggiorna" class="pulsante" title="Scarica nuovi dati">⟳ Aggiorna</button>
+        <button id="apri-impostazioni" class="pulsante secondario" title="Parametri agronomici e layer">⚙ Parametri</button>
+      </div>
+    </div>
+
+    <nav class="navigazione" role="tablist" aria-label="Sezioni">
+      <button class="scheda-nav" role="tab" id="tab-cruscotto" aria-controls="cruscotto" data-sezione="cruscotto">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>
+        Cruscotto
+      </button>
+      <button class="scheda-nav" role="tab" id="tab-previsioni" aria-controls="previsioni" data-sezione="previsioni">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="m7 15 4-5 3 3 5-7"/></svg>
+        Previsioni e bilancio
+      </button>
+      <button class="scheda-nav" role="tab" id="tab-almanacco" aria-controls="almanacco" data-sezione="almanacco">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21c-4-2-8-6-8-12 4 0 6 2 8 5 2-3 4-5 8-5 0 6-4 10-8 12Z"/><path d="M12 21V11"/></svg>
+        Almanacco colturale
+      </button>
+      <button class="scheda-nav" role="tab" id="tab-stazioni" aria-controls="stazioni" data-sezione="stazioni">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v6"/><path d="M8 8h8l-1 13H9L8 8Z"/><path d="M5 5l3 3M19 5l-3 3"/></svg>
+        Calibrazione stazione
+      </button>
+    </nav>
+  </header>
+
+  <div class="avvisi-contenitore"><div id="avvisi" class="avvisi" hidden></div></div>
+
+  <main>
+    <!-- ===================== CRUSCOTTO ===================== -->
+    <section id="cruscotto" class="sezione" role="tabpanel" aria-labelledby="tab-cruscotto">
+      <div id="kpi" class="kpi"></div>
+      <div class="griglia">
+        <section class="pannello allerte-pannello" aria-labelledby="t-allerte">
+          <h2 id="t-allerte">Sintesi prossime 72 ore</h2>
+          <ul id="allerte" class="allerte"></ul>
+        </section>
+
+        <section class="pannello suolo" aria-labelledby="t-suolo">
+          <h2 id="t-suolo">Profilo del suolo</h2>
+          <div id="profilo-suolo" class="profilo-suolo"></div>
+          <div id="semina" class="semina"></div>
+          <div class="grafico alto-220"><canvas id="g-suolo" aria-label="Temperatura del suolo a 7 giorni"></canvas></div>
+        </section>
+
+        <section class="pannello mappa-pannello" aria-labelledby="t-mappa">
+          <div class="intestazione-pannello">
+            <h2 id="t-mappa">Radar live e appezzamenti</h2>
+            <div class="strumenti-mappa">
+              <button id="disegna" class="pulsante secondario">✎ Disegna appezzamento</button>
+              <label class="pulsante secondario file">⇪ Importa GeoJSON<input id="importa-geojson" type="file" accept=".geojson,.json,application/geo+json" hidden></label>
+              <button id="copia-geojson" class="pulsante secondario" title="Copia gli appezzamenti negli appunti">⧉ Copia GeoJSON</button>
+            </div>
+          </div>
+          <div id="mappa" class="mappa"></div>
+          <div id="disegno" class="barra-disegno" hidden>
+            <span id="disegno-info">Tocca la mappa per aggiungere i vertici</span>
+            <input id="disegno-nome" type="text" placeholder="Nome appezzamento">
+            <select id="disegno-tipo">
+              <option value="vigneto">Vigneto</option>
+              <option value="pascolo">Pascolo</option>
+              <option value="seminativo">Seminativo</option>
+              <option value="erbaio">Erbaio / foraggere</option>
+              <option value="orto">Orto</option>
+              <option value="oliveto">Oliveto</option>
+              <option value="altro">Altro</option>
+            </select>
+            <button id="disegno-annulla-punto" class="pulsante secondario">↶ Punto</button>
+            <button id="disegno-fine" class="pulsante">Salva</button>
+            <button id="disegno-esci" class="pulsante secondario">Annulla</button>
+          </div>
+          <div class="player-radar">
+            <button id="radar-indietro" class="pulsante secondario icona" aria-label="Fotogramma precedente">⏮</button>
+            <button id="radar-play" class="pulsante icona" aria-label="Riproduci">▶</button>
+            <button id="radar-avanti" class="pulsante secondario icona" aria-label="Fotogramma successivo">⏭</button>
+            <input id="radar-slider" type="range" min="0" max="0" value="0" aria-label="Scorrimento temporale radar">
+            <span id="radar-ora" class="radar-ora">—</span>
+            <label class="opacita">Opacità <input id="radar-opacita" type="range" min="0" max="100" value="70"></label>
+          </div>
+        </section>
+
+        <section class="pannello matrice-pannello" aria-labelledby="t-matrice">
+          <div class="intestazione-pannello">
+            <h2 id="t-matrice">Matrice decisionale agronomica · 72 h</h2>
+            <ul class="legenda-semaforo">
+              <li><i class="s-verde"></i>Favorevole / basso</li>
+              <li><i class="s-giallo">•</i>Cautela / medio</li>
+              <li><i class="s-arancio">▲</i>Elevato</li>
+              <li><i class="s-rosso">✕</i>Vietato / alto</li>
+              <li><i class="s-inattivo">–</i>Non applicabile</li>
+            </ul>
+          </div>
+          <div id="matrice" class="matrice" role="grid"></div>
+          <p id="dettaglio-cella" class="dettaglio-cella">Tocca una cella per i dettagli.</p>
+        </section>
+      </div>
+    </section>
+
+    <!-- ===================== PREVISIONI ===================== -->
+    <section id="previsioni" class="sezione" role="tabpanel" aria-labelledby="tab-previsioni" hidden>
+      <div class="intestazione-sezione">
+        <div>
+          <h2>Bilancio idrico e previsioni a 7 giorni</h2>
+          <p>Ultimi 7 giorni osservati dal modello e 7 giorni di previsione; la linea tratteggiata indica l'ora corrente.</p>
+        </div>
+      </div>
+      <div class="griglia-grafici">
+        <figure class="pannello">
+          <figcaption>Pioggia, ETc (ET0 × Kc <span id="kc-etichetta"></span>) e bilancio cumulato · mm</figcaption>
+          <div class="grafico alto-260"><canvas id="g-bilancio"></canvas></div>
+        </figure>
+        <figure class="pannello">
+          <figcaption>Temperatura aria e punto di rugiada · °C</figcaption>
+          <div class="grafico alto-260"><canvas id="g-temperatura"></canvas></div>
+        </figure>
+        <figure class="pannello">
+          <figcaption>Radiazione solare globale e diretta · W/m² (PAR nel tooltip)</figcaption>
+          <div class="grafico alto-220"><canvas id="g-radiazione"></canvas></div>
+        </figure>
+        <figure class="pannello">
+          <figcaption>Somma termica stagionale (GDD cumulati)</figcaption>
+          <div id="gdd-totali" class="gdd-totali"></div>
+          <div class="grafico alto-200"><canvas id="g-gdd"></canvas></div>
+        </figure>
+      </div>
+      <details class="pannello tabella-giorni" open>
+        <summary>Tabella giornaliera</summary>
+        <div class="scorri"><table id="tabella-giorni"></table></div>
+      </details>
+    </section>
+
+    <!-- ===================== ALMANACCO ===================== -->
+    <section id="almanacco" class="sezione" role="tabpanel" aria-labelledby="tab-almanacco" hidden>
+      <div class="almanacco">
+        <nav class="pannello indice-almanacco" aria-label="Sezioni dell'almanacco">
+          <input id="cerca-almanacco" class="cerca-almanacco" type="search" placeholder="Cerca coltura o argomento…" autocomplete="off">
+          <ul id="indice-almanacco"></ul>
+        </nav>
+        <div id="contenuto-almanacco" class="contenuto-almanacco"></div>
+      </div>
+    </section>
+
+    <!-- ===================== STAZIONI ===================== -->
+    <section id="stazioni" class="sezione" role="tabpanel" aria-labelledby="tab-stazioni" hidden>
+      <div class="intestazione-sezione">
+        <div>
+          <h2>Calibrazione con stazione (ARPAS o aziendale)</h2>
+          <p>Confronta la pioggia osservata con la stima dei modelli nella località attiva per conoscerne l'affidabilità locale.</p>
+        </div>
+      </div>
+      <div class="pannello">
+        <p class="nota">Importa un CSV con una colonna data/ora e una di precipitazione (separatore <code>;</code> o <code>,</code>,
+          decimali con virgola ammessi).</p>
+        <div class="riga-form">
+          <input id="stazione-nome" type="text" placeholder="Nome stazione (es. ARPAS Seulo)">
+          <label class="pulsante file">⇪ Carica CSV<input id="stazione-csv" type="file" accept=".csv,.txt,text/csv" hidden></label>
+        </div>
+        <div id="confronto" class="confronto"></div>
+      </div>
+    </section>
+  </main>
+
+  <dialog id="impostazioni" class="dialogo">
+    <form method="dialog" id="form-impostazioni">
+      <h2>Parametri agronomici</h2>
+      <fieldset>
+        <legend>Vigneto</legend>
+        <label class="campo">Lunghezza germogli (cm) <input name="germogli_cm" type="number" min="0" max="300" step="1"></label>
+        <p class="nota">0 = vite in riposo vegetativo: i modelli di peronospora e oidio vengono sospesi.</p>
+        <label class="campo">Inizio conteggio GDD vite <input name="inizio_vite" type="date"></label>
+      </fieldset>
+      <fieldset>
+        <legend>Erbai e foraggere</legend>
+        <label class="campo">Inizio conteggio GDD (semina) <input name="inizio_foraggere" type="date"></label>
+      </fieldset>
+      <fieldset>
+        <legend>Bilancio idrico</legend>
+        <label class="campo">Coltura (Kc)
+          <select name="kc_preset">
+            <option value="">Personalizzato</option>
+            <option value="0.3">Vite a riposo / inizio germogliamento (0.30)</option>
+            <option value="0.7">Vite in piena vegetazione (0.70)</option>
+            <option value="0.45">Vite in post-vendemmia (0.45)</option>
+            <option value="0.4">Erbaio autunno-vernino iniziale (0.40)</option>
+            <option value="1.05">Erbaio / medicaio a pieno sviluppo (1.05)</option>
+            <option value="0.85">Pascolo permanente (0.85)</option>
+            <option value="1.15">Orticole a pieno sviluppo (1.15)</option>
+            <option value="0.6">Orticole al trapianto (0.60)</option>
+            <option value="0.65">Oliveto (0.65)</option>
+          </select>
+        </label>
+        <label class="campo">Kc <input name="kc" type="number" min="0.1" max="1.5" step="0.05"></label>
+        <label class="campo">Soglia pioggia efficace (mm) <input name="pioggia_soglia" type="number" min="0" max="20" step="0.5"></label>
+        <label class="campo">Efficienza pioggia (0–1) <input name="pioggia_efficienza" type="number" min="0.1" max="1" step="0.05"></label>
+      </fieldset>
+      <fieldset>
+        <legend>Suolo (m³/m³)</legend>
+        <label class="campo">Tessitura
+          <select name="suolo_preset">
+            <option value="">Personalizzata</option>
+            <option value="0.06,0.18">Sabbioso</option>
+            <option value="0.12,0.32">Franco</option>
+            <option value="0.20,0.40">Argilloso</option>
+          </select>
+        </label>
+        <label class="campo">Punto di appassimento <input name="suolo_pa" type="number" min="0.01" max="0.5" step="0.01"></label>
+        <label class="campo">Capacità di campo <input name="suolo_cc" type="number" min="0.05" max="0.6" step="0.01"></label>
+      </fieldset>
+      <fieldset>
+        <legend>Mappa</legend>
+        <label class="campo">Base cartografica
+          <select name="base">
+            <option value="chiaro">Esri Light Gray (consigliata)</option>
+            <option value="scuro">Esri Dark Gray</option>
+            <option value="osm">OpenStreetMap</option>
+            <option value="topo">OpenTopoMap (rilievo)</option>
+            <option value="s2">Sentinel-2 cloudless (EOX)</option>
+          </select>
+        </label>
+        <label class="spunta"><input name="vento" type="checkbox"> Vettori del vento</label>
+        <label class="spunta"><input name="wms_attivo" type="checkbox"> Layer WMS Protezione Civile / ARPAS</label>
+        <label class="campo">URL WMS <input name="wms_url" type="url"></label>
+        <label class="campo">Layer WMS <input name="wms_layer" type="text" placeholder="es. radar:vmi oppure radar:sri"></label>
+      </fieldset>
+      <div class="azioni">
+        <button value="annulla" class="pulsante secondario">Annulla</button>
+        <button value="ok" class="pulsante">Applica</button>
+      </div>
+    </form>
+  </dialog>
+</body>
+</html>

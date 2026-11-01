@@ -1,0 +1,35 @@
+[package]
+name = "agrometeo-sardegna"
+version = "0.2.0"
+description = "Agrometeo Sardegna - Decision Support System agrometeorologico per la Sardegna"
+authors = ["Luigi Sionis"]
+license = "MIT"
+edition = "2024"
+
+[lib]
+name = "agrometeo_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[dependencies]
+tauri = { version = "2.12.4", features = [] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+reqwest = { version = "0.13", features = ["json", "query", "gzip"] }
+chrono = { version = "0.4", features = ["serde"] }
+thiserror = "2"
+
+# Su Android il verificatore TLS di piattaforma (rustls-platform-verifier) richiede
+# un'inizializzazione JNI: si usano invece le radici Mozilla incluse nel binario.
+[target.'cfg(target_os = "android")'.dependencies]
+webpki-root-certs = "1"
+
+[dev-dependencies]
+tokio = { version = "1", features = ["macros", "rt-multi-thread"] }
+
+[build-dependencies]
+tauri-build = { version = "2.7.3", features = [] }
+
+[profile.release]
+lto = true
+codegen-units = 1
+strip = true
