@@ -1,6 +1,6 @@
 [package]
 name = "agrometeo-sardegna"
-version = "0.2.0"
+version = "0.3.0"
 description = "Agrometeo Sardegna - Decision Support System agrometeorologico per la Sardegna"
 authors = ["Luigi Sionis"]
 license = "MIT"

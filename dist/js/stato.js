@@ -3,6 +3,7 @@ import { api } from "./api.js";
 
 export const stato = {
   spazio: null,
+  catalogo: null,
   report: null,
   ascoltatori: new Set(),
 };

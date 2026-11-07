@@ -1,5 +1,6 @@
-// Matrice decisionale a semaforo (72 ore) e sintesi delle allerte.
+// Matrice decisionale a semaforo (72 ore) con icone SVG descrittive e sintesi delle allerte.
 import { SIMBOLO, dataLocale, el, giorno, ora, pallino, quando } from "./formato.js";
+import { svg } from "./illustrazioni.js";
 
 let report;
 let selezionata;
@@ -15,6 +16,7 @@ export function initMatrice() {
       " ",
       el("strong", {}, `${riga.titolo} · ${quando(report.matrice.ore[Number(td.dataset.i)])}: ${cella.etichetta}`),
       ` — ${cella.motivo}`,
+      riga.regola ? el("span", { class: "regola-cella" }, ` (${riga.regola})`) : null,
     );
     return true;
   };
@@ -46,7 +48,7 @@ export function renderMatrice(r) {
     el(
       "thead",
       {},
-      el("tr", {}, el("th", { class: "riga" }), ...giorni.map((g) => el("th", { class: "giorno", colspan: g.n }, giorno(g.d)))),
+      el("tr", {}, el("th", { class: "riga" }, "Indicatore"), ...giorni.map((g) => el("th", { class: "giorno", colspan: g.n }, giorno(g.d)))),
       el(
         "tr",
         {},
@@ -64,7 +66,11 @@ export function renderMatrice(r) {
         el(
           "tr",
           {},
-          el("th", { class: "riga", scope: "row" }, riga.titolo),
+          el(
+            "th",
+            { class: "riga", scope: "row", title: riga.regola || riga.titolo },
+            el("span", { class: "intestazione-riga-matrice" }, riga.icona ? svg(riga.icona, "icona-matrice") : null, el("span", {}, riga.titolo)),
+          ),
           ...riga.celle.map((c, i) =>
             el(
               "td",
@@ -72,7 +78,7 @@ export function renderMatrice(r) {
                 class: `s-${c.livello}${ore[i].endsWith("T00:00:00") && i > 0 ? " mezzanotte" : ""}`,
                 "data-r": ri,
                 "data-i": i,
-                title: `${ora(ore[i])} · ${c.etichetta}`,
+                title: `${ora(ore[i])} · ${c.etichetta} — ${c.motivo}`,
               },
               SIMBOLO[c.livello],
             ),
@@ -87,7 +93,14 @@ export function renderMatrice(r) {
 export function renderAllerte(r) {
   const lista = document.getElementById("allerte");
   if (!r.allerte.length) {
-    lista.replaceChildren(el("li", { class: "l-verde" }, pallino("verde"), el("div", {}, el("strong", {}, "Nessuna criticità prevista"))));
+    lista.replaceChildren(
+      el(
+        "li",
+        { class: "l-verde" },
+        pallino("verde"),
+        el("div", {}, el("strong", {}, "Nessuna criticità prevista nelle prossime 72 ore"), el("div", { class: "motivo" }, "Condizioni regolari per le operazioni di campo.")),
+      ),
+    );
     return;
   }
   lista.replaceChildren(

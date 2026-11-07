@@ -1,6 +1,7 @@
-// Header operativo: selettore località, ricerca, KPI immediati, età del dato.
+// Header operativo: selettore località, ricerca, KPI immediati con icone SVG descrittive, età del dato.
 import { api } from "./api.js";
 import { el, eta, num, pallino, puntoCardinale } from "./formato.js";
+import { svg } from "./illustrazioni.js";
 import { salvaSpazio, stato } from "./stato.js";
 
 const $ = (id) => document.getElementById(id);
@@ -128,26 +129,43 @@ export function aggiornaBadge() {
   b.title = `Scaricati il ${new Date(r.scaricato_il).toLocaleString("it-IT")} · modello a ${Math.round(r.quota_modello)} m s.l.m. (${r.lat_modello.toFixed(3)}, ${r.lon_modello.toFixed(3)})`;
 }
 
-function voce(etichetta, valore, unita, classe) {
+function voce(iconaId, etichetta, valore, unita, classe) {
   return el(
     "div",
-    { class: "kpi-voce", title: classe?.motivo },
-    el("div", { class: "etichetta" }, etichetta),
-    el("div", { class: "valore" }, valore, el("span", { class: "unita" }, unita)),
-    classe ? el("div", { class: "classe" }, pallino(classe.livello), classe.etichetta) : null,
+    { class: `kpi-voce ${classe?.livello ? `kpi-${classe.livello}` : ""}`.trim(), title: classe?.motivo || etichetta },
+    svg(iconaId, "kpi-icona"),
+    el(
+      "div",
+      { class: "kpi-corpo" },
+      el("div", { class: "etichetta" }, etichetta),
+      el("div", { class: "valore" }, valore, unita ? el("span", { class: "unita" }, unita) : null),
+      classe ? el("div", { class: "classe" }, pallino(classe.livello), classe.etichetta) : null,
+    ),
   );
 }
 
 export function renderKpi(r) {
   const k = r.kpi;
   $("kpi").replaceChildren(
-    voce("Temperatura", num(k.t), "°C", { livello: "inattivo", etichetta: `percepita ${num(k.t_percepita)} °C`, motivo: "" }),
-    voce("Umidità rel.", num(k.rh, 0), "%", { livello: "inattivo", etichetta: `rugiada ${num(k.td)} °C`, motivo: "" }),
-    voce("VPD", num(k.vpd, 2), "kPa", k.vpd_classe),
-    voce("THI", num(k.thi, 1), "", k.thi_classe),
-    voce("Pioggia 24 h", num(k.pioggia_24h), "mm"),
-    voce("Vento", num(k.vento, 0), "km/h", { livello: "inattivo", etichetta: `${puntoCardinale(k.vento_dir)} · raffiche ${num(k.raffiche, 0)}`, motivo: "" }),
-    voce("ET0 oggi", num(k.et0_oggi), "mm"),
+    voce("kpi-temp", "Temperatura", num(k.t), "°C", { livello: "inattivo", etichetta: `percepita ${num(k.t_percepita)} °C`, motivo: "Temperatura dell'aria a 2 m dal suolo" }),
+    voce("kpi-rh", "Umidità rel.", num(k.rh, 0), "%", { livello: "inattivo", etichetta: `rugiada ${num(k.td)} °C`, motivo: "Umidità relativa e punto di rugiada" }),
+    voce("kpi-vpd", "VPD", num(k.vpd, 2), "kPa", k.vpd_classe),
+    voce("kpi-thi", "THI", num(k.thi, 1), "", k.thi_classe),
+    voce("kpi-pioggia", "Pioggia 24 h", num(k.pioggia_24h), "mm", {
+      livello: k.pioggia_24h >= 10 ? "giallo" : k.pioggia_24h >= 1 ? "verde" : "inattivo",
+      etichetta: k.pioggia_24h >= 1 ? "cumulata ultime 24 h" : "assente / tracce",
+      motivo: "Precipitazione cumulata nelle ultime 24 ore",
+    }),
+    voce("kpi-vento", "Vento", num(k.vento, 0), "km/h", {
+      livello: k.vento > 20 || k.raffiche > 35 ? "arancio" : k.vento > 12 ? "giallo" : "verde",
+      etichetta: `${puntoCardinale(k.vento_dir)} · raffiche ${num(k.raffiche, 0)}`,
+      motivo: "Velocità media a 10 m, direzione di provenienza e raffiche",
+    }),
+    voce("kpi-et0", "ET0 oggi", num(k.et0_oggi), "mm", {
+      livello: "inattivo",
+      etichetta: "FAO-56 Penman-Monteith",
+      motivo: "Evapotraspirazione di riferimento giornaliera",
+    }),
   );
   const avvisi = $("avvisi");
   avvisi.hidden = r.avvisi.length === 0;

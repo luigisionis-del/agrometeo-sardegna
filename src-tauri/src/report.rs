@@ -7,12 +7,13 @@ use chrono::{DateTime, Datelike, Duration, NaiveDate, NaiveDateTime, Timelike, U
 use serde::{Deserialize, Serialize};
 
 use crate::agro::disease::{self, IngressoPrimaria};
-use crate::agro::frost_soil::{self, IdoneitaSemina, ParametriSuolo};
+use crate::agro::frost_soil::{self, IdoneitaSemina, ParametriSuolo, StatoUmidita};
 use crate::agro::gdd::{self, GiornoGdd, T_BASE_FORAGGERE, T_BASE_VITE};
 use crate::agro::spray::{self, CondizioniTrattamento};
 use crate::agro::water::{self, ParametriPioggia};
 use crate::agro::wetness;
 use crate::agro::{Semaforo, Valutazione, media, media_indietro, somma_indietro, thi};
+use crate::almanacco::{self, AnalisiAlmanacco};
 use crate::model::{Giorno, Luogo, OpenMeteoForecast, OpenMeteoHistory, Ora, parse_data};
 
 /// Parametri agronomici scelti dall'utente.
@@ -111,6 +112,8 @@ pub struct Kpi {
 pub struct RigaMatrice {
     pub id: &'static str,
     pub titolo: &'static str,
+    pub icona: &'static str,
+    pub regola: &'static str,
     pub celle: Vec<Valutazione>,
 }
 
@@ -154,6 +157,10 @@ pub struct StatoSuolo {
     pub temperature: [f64; 4],
     pub strati_cm: [(u32, u32); 5],
     pub umidita: [f64; 5],
+    /// Frazione di acqua disponibile `(u - PA) / (CC - PA)` per ciascuno dei 5 strati.
+    pub frazione_disponibile: [f64; 5],
+    /// Stato idrico (`secco`, `tempera`, `eccesso`) per ciascuno dei 5 strati.
+    pub stati_strati: [StatoUmidita; 5],
     pub semina: IdoneitaSemina,
 }
 
@@ -188,6 +195,7 @@ pub struct Report {
     pub gdd: Vec<SommaTermica>,
     pub suolo: StatoSuolo,
     pub allerte: Vec<Allerta>,
+    pub almanacco: AnalisiAlmanacco,
     pub parametri: ParametriAgro,
 }
 
@@ -281,14 +289,62 @@ pub fn costruisci(
     let matrice = Matrice {
         ore: finestra.clone().map(|i| ore[i].time).collect(),
         righe: vec![
-            RigaMatrice { id: "trattamenti", titolo: "Finestra trattamenti", celle: trattamenti },
-            RigaMatrice { id: "bagnatura", titolo: "Bagnatura fogliare", celle: bagnatura },
-            RigaMatrice { id: "peronospora_primaria", titolo: "Peronospora primaria", celle: primaria },
-            RigaMatrice { id: "peronospora_secondaria", titolo: "Peronospora secondaria", celle: secondaria },
-            RigaMatrice { id: "oidio", titolo: "Oidio", celle: oidio },
-            RigaMatrice { id: "thi", titolo: "Stress THI ovini/caprini", celle: stress_thi },
-            RigaMatrice { id: "gelata", titolo: "Gelate", celle: gelata },
-            RigaMatrice { id: "vpd", titolo: "VPD stomatico", celle: vpd },
+            RigaMatrice {
+                id: "trattamenti",
+                titolo: "Finestra trattamenti",
+                icona: "mat-trattamenti",
+                regola: "Ottimale con vento < 10 km/h, raffiche < 15 km/h, T 12–25 °C, UR 40–80 % e assenza di pioggia nelle 6 h successive.",
+                celle: trattamenti,
+            },
+            RigaMatrice {
+                id: "bagnatura",
+                titolo: "Bagnatura fogliare",
+                icona: "mat-bagnatura",
+                regola: "Foglia bagnata con pioggia > 0,1 mm/h, UR ≥ 90 % o scarto di rugiada T−Td ≤ 2,0 °C; arancio oltre 6 ore consecutive.",
+                celle: bagnatura,
+            },
+            RigaMatrice {
+                id: "peronospora_primaria",
+                titolo: "Peronospora primaria",
+                icona: "mat-peronospora",
+                regola: "Regola dei 3 dieci: germogli > 10 cm, T media 24h o T suolo 6cm ≥ 10 °C e pioggia cumulata 48h ≥ 10 mm.",
+                celle: primaria,
+            },
+            RigaMatrice {
+                id: "peronospora_secondaria",
+                titolo: "Peronospora secondaria",
+                icona: "mat-secondaria",
+                regola: "Modello Goidanich semplificato: rischio alto con bagnatura fogliare ≥ 6 h e temperatura media 18–24 °C.",
+                celle: secondaria,
+            },
+            RigaMatrice {
+                id: "oidio",
+                titolo: "Oidio",
+                icona: "mat-oidio",
+                regola: "Rischio alto con T 20–27 °C, UR > 45 % e pioggia 24h < 2 mm; inibito con T > 33 °C e radiazione ≥ 600 W/m².",
+                celle: oidio,
+            },
+            RigaMatrice {
+                id: "thi",
+                titolo: "Stress THI ovini/caprini",
+                icona: "mat-thi",
+                regola: "Indice NRC temperatura-umidità: benessere < 68, disagio lieve 68–72, stress moderato 72–78, severo ≥ 78.",
+                celle: stress_thi,
+            },
+            RigaMatrice {
+                id: "gelata",
+                titolo: "Gelate",
+                icona: "mat-gelata",
+                regola: "Allerta rossa con T ≤ 0 °C o gelata per irraggiamento (T ≤ 3 °C, Td ≤ 0 °C, nubi < 25 %, vento < 8 km/h).",
+                celle: gelata,
+            },
+            RigaMatrice {
+                id: "vpd",
+                titolo: "VPD stomatico",
+                icona: "mat-vpd",
+                regola: "Deficit di pressione di vapore: ottimale 0,4–1,2 kPa; sotto 0,4 condensa, oltre 1,6 kPa chiusura stomatica.",
+                celle: vpd,
+            },
         ],
     };
 
@@ -318,15 +374,29 @@ pub fn costruisci(
     let gdd = somme_termiche(payload, &giorni_meteo, &parametri, oggi, &mut avvisi);
 
     let o = &ore[indice_ora];
+    let denom_suolo = (parametri.suolo.capacita_campo - parametri.suolo.punto_appassimento).max(1e-6);
     let suolo = StatoSuolo {
         profondita_cm: [0, 6, 18, 54],
         temperature: o.suolo_t,
         strati_cm: [(0, 1), (1, 3), (3, 9), (9, 27), (27, 81)],
         umidita: o.suolo_u,
+        frazione_disponibile: o.suolo_u.map(|u| (u - parametri.suolo.punto_appassimento) / denom_suolo),
+        stati_strati: o.suolo_u.map(|u| frost_soil::stato_umidita(u, parametri.suolo)),
         semina: frost_soil::idoneita_semina(o.suolo_t[1], o.suolo_u[2], parametri.suolo),
     };
 
     let allerte = allerte(&matrice);
+    let schede_almanacco = almanacco::tutte_le_schede();
+    let almanacco = almanacco::analizza_report(
+        ora_corrente,
+        indice_ora,
+        &ore,
+        &giorni,
+        &suolo,
+        &kpi,
+        &parametri,
+        &schede_almanacco,
+    );
 
     Report {
         luogo: payload.luogo.clone(),
@@ -346,6 +416,7 @@ pub fn costruisci(
         gdd,
         suolo,
         allerte,
+        almanacco,
         parametri,
     }
 }

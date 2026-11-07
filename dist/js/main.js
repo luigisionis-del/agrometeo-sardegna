@@ -2,6 +2,7 @@
 import { aggiornaAlmanacco, initAlmanacco } from "./almanacco.js";
 import { api } from "./api.js";
 import { graficoBilancio, graficoGdd, graficoRadiazione, graficoTemperatura, tabellaGiorni } from "./grafici.js";
+import { popolaSegnapostoSvg } from "./illustrazioni.js";
 import { initImpostazioni } from "./impostazioni.js";
 import { applicaLayer, centraSuLuogo, initMappa } from "./mappa.js";
 import { initMatrice, renderAllerte, renderMatrice } from "./matrice.js";
@@ -55,8 +56,11 @@ function renderTutto(r) {
 
 async function avvia() {
   initNavigazione();
+  const [spazio, catalogo] = await Promise.all([api.spazioLavoro(), api.catalogoAlmanacco()]);
+  stato.spazio = spazio;
+  stato.catalogo = catalogo;
+  popolaSegnapostoSvg();
   initAlmanacco();
-  stato.spazio = await api.spazioLavoro();
   suReport(renderTutto);
   initTestata({ impostaLuogo, aggiorna: carica });
   initMatrice();

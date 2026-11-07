@@ -139,6 +139,7 @@
           <p>Ultimi 7 giorni osservati dal modello e 7 giorni di previsione; la linea tratteggiata indica l'ora corrente.</p>
         </div>
       </div>
+      <div class="pannello banner-infografica" data-svg-id="info-bilancio-idrico" aria-label="Schema esplicativo del bilancio idrico FAO-56"></div>
       <div class="griglia-grafici">
         <figure class="pannello">
           <figcaption>Pioggia, ETc (ET0 × Kc <span id="kc-etichetta"></span>) e bilancio cumulato · mm</figcaption>
@@ -183,12 +184,14 @@
           <p>Confronta la pioggia osservata con la stima dei modelli nella località attiva per conoscerne l'affidabilità locale.</p>
         </div>
       </div>
+      <div class="pannello banner-infografica" data-svg-id="info-calibrazione" aria-label="Schema esplicativo della calibrazione con stazione pluviometrica"></div>
       <div class="pannello">
         <p class="nota">Importa un CSV con una colonna data/ora e una di precipitazione (separatore <code>;</code> o <code>,</code>,
-          decimali con virgola ammessi).</p>
+          decimali con virgola ammessi) oppure carica il dataset dimostrativo di 30 giorni.</p>
         <div class="riga-form">
           <input id="stazione-nome" type="text" placeholder="Nome stazione (es. ARPAS Seulo)">
           <label class="pulsante file">⇪ Carica CSV<input id="stazione-csv" type="file" accept=".csv,.txt,text/csv" hidden></label>
+          <button id="stazione-esempio" type="button" class="pulsante secondario">✦ Prova con esempio ARPAS (30 gg)</button>
         </div>
         <div id="confronto" class="confronto"></div>
       </div>

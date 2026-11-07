@@ -8,5 +8,7 @@ export const api = {
   cercaLocalita: (testo) => invoke("cerca_localita", { testo }),
   spazioLavoro: () => invoke("spazio_lavoro"),
   salvaSpazioLavoro: (spazio) => invoke("salva_spazio_lavoro", { spazio }),
+  catalogoAlmanacco: () => invoke("catalogo_almanacco"),
+  csvEsempioStazione: () => invoke("csv_esempio_stazione"),
   confrontaStazione: (nome, csv, lat, lon) => invoke("confronta_stazione", { nome, csv, lat, lon }),
 };

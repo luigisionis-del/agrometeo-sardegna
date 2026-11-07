@@ -1,11 +1,14 @@
 //! Agrometeo Sardegna: backend Tauri.
 //!
-//! Strati: `fetch` (data ingestion) → `report` + `agro` (calcolo, funzioni
-//! pure) → comandi Tauri (questo file) → frontend (`dist/`, solo rendering).
+//! Strati: `fetch` (data ingestion) → `report` + `agro` + `almanacco` (calcolo
+//! agronomico, funzioni pure in Rust) → comandi Tauri (questo file) → frontend
+//! (`dist/`, solo rendering e visualizzazione SVG).
 
 pub mod agro;
+pub mod almanacco;
 pub mod error;
 pub mod fetch;
+pub mod illustrazioni;
 pub mod model;
 pub mod report;
 pub mod stations;
@@ -17,6 +20,7 @@ use std::time::{Duration, Instant};
 use chrono::{Duration as ChronoDuration, Timelike, Utc};
 use tauri::{Manager, State};
 
+use almanacco::CatalogoAlmanacco;
 use error::{AppError, Result};
 use fetch::{Localita, PuntoVento, Radar};
 use model::Luogo;
@@ -138,6 +142,17 @@ fn salva_spazio_lavoro(stato: State<'_, Stato>, spazio: SpazioLavoro) -> Result<
 }
 
 #[tauri::command]
+fn catalogo_almanacco() -> CatalogoAlmanacco {
+    almanacco::catalogo()
+}
+
+#[tauri::command]
+fn csv_esempio_stazione() -> String {
+    let oggi = report::ora_locale(Utc::now(), 3600).date();
+    stations::genera_csv_esempio(oggi)
+}
+
+#[tauri::command]
 async fn confronta_stazione(stato: State<'_, Stato>, nome: String, csv: String, lat: f64, lon: f64) -> Result<Confronto> {
     valida_coordinate(lat, lon)?;
     let fonte = CsvStazione { nome, testo: &csv };
@@ -168,6 +183,8 @@ pub fn run() {
             cerca_localita,
             spazio_lavoro,
             salva_spazio_lavoro,
+            catalogo_almanacco,
+            csv_esempio_stazione,
             confronta_stazione
         ])
         .run(tauri::generate_context!())

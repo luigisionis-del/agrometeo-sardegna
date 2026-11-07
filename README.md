@@ -32,25 +32,22 @@ Mozilla incluse (`webpki-root-certs`): il verificatore di piattaforma richiedere
 ## Architettura
 
 ```
-dist/                      Frontend statico, solo rendering (nessuna chiamata HTTP diretta), tema chiaro
+dist/                      Frontend statico leggero: solo rendering DOM/SVG/Chart.js/Leaflet, tema chiaro
   js/api.js                wrapper dei comandi Tauri
+  js/illustrazioni.js      rendering sicuro delle icone, illustrazioni e infografiche SVG dal catalogo Rust
   js/navigazione.js        schede principali: Cruscotto, Previsioni e bilancio, Almanacco, Calibrazione
-  js/almanacco.js          almanacco: indice, ricerca, schede colturali, consigli del giorno, calendari
-  js/almanacco/dati.js     contenuti (lavorazioni, avena, orzo, trifogli, medica, loietto, erbai per ovini,
-                           19 orticole, canapa) con soglie termiche, Kc FAO-56, calendari e fonti
-  js/almanacco/analisi.js  funzioni pure: tempera 3–9 e 9–27 cm, gelate 72 h, THI, periodo di Smith,
-                           finestre per azoto, erbai e fienagione, confronto suolo/colture
-  js/testata.js            località, ricerca comuni/coordinate, KPI, età del dato
-  js/suolo.js              profilo stratigrafico del suolo
+  js/almanacco.js          rendering dell'Almanacco colturale, infografiche, termometro suolo e calendari
+  js/testata.js            località, ricerca comuni/coordinate, KPI con icone SVG, età del dato
+  js/suolo.js              sezione stratigrafica SVG degli apparati radicali, termometri e barre idriche
   js/mappa.js              radar RainViewer, WMS opzionale, vento, appezzamenti GeoJSON
-  js/matrice.js            matrice a semaforo 72 h e sintesi allerte
+  js/matrice.js            matrice a semaforo 72 h con icone e regole agronomiche, sintesi allerte
   js/grafici.js            Chart.js: suolo, bilancio idrico, temperature, radiazione, GDD
   js/impostazioni.js       parametri agronomici e layer
-  js/stazioni.js           confronto con stazione (CSV)
-src-tauri/src/
+  js/stazioni.js           confronto con stazione (CSV o dataset dimostrativo ARPAS 30 gg)
+src-tauri/src/             Tutta la logica di dominio, i calcoli, il catalogo e le illustrazioni in Rust
   fetch.rs                 Data ingestion: Open-Meteo (previsione, storico, geocoding, vento), RainViewer
   model.rs                 struct dei payload e normalizzazione (lacune interpolate)
-  agro/                    Motore agronomico: funzioni pure con test
+  agro/                    Motore agrometeorologico: funzioni pure con test
     wetness.rs             3.1 bagnatura fogliare
     disease.rs             3.2 peronospora (3 dieci, Goidanich semplificato), oidio
     spray.rs               3.3 finestra trattamenti
@@ -58,10 +55,23 @@ src-tauri/src/
     water.rs               3.5 bilancio idrico, classi VPD
     thi.rs                 3.6 THI ovini/caprini
     frost_soil.rs          3.7 gelate, lavorabilità e semina
-  report.rs                assemblaggio deterministico del report (ricalcolabile offline)
-  stations.rs              importatore CSV stazioni (trait FonteOsservazioni) e statistiche
+  almanacco/               Catalogo colturale e motore di analisi dinamica in Rust
+    mod.rs                 tipi condivisi, assemblaggio catalogo e test d'integrità
+    sezioni.rs             8 sezioni tematiche, mesi, bibliografia scientifica e avvertenze
+    suolo_cereali.rs       lavorazioni del terreno (aratura, conservative, letto di semina), avena, orzo
+    foraggere_ovini.rs     trifogli, medica, loietto e gestione foraggera per la pecora Sarda
+    orticole_canapa.rs     principi orticoli, 18 orticole da pieno campo e canapa industriale
+    analisi.rs             motore puro: tempera 3–9/9–27 cm, gelate, THI, periodo di Smith, 9 consigli live
+  illustrazioni/           Catalogo vettoriale (SVG) descrittivo ed esplicativo validato dai test Rust
+    mod.rs                 mappa illustrazioni e test di copertura di tutte le schede, sezioni e KPI
+    icone_kpi_matrice.rs   icone KPI, righe matrice 72 h, illustrazioni sezioni e consigli del giorno
+    colture.rs             36 illustrazioni botaniche e tecniche per le schede colturali
+    infografiche.rs        10 infografiche scientifiche (tempera, levata, geocarpia, 3 foglie, pecora Sarda,
+                           THI, rotazione orto, profondità seme, bilancio FAO-56, calibrazione stazione)
+  report.rs                assemblaggio deterministico del report (inclusa l'analisi dell'Almanacco)
+  stations.rs              importatore CSV stazioni, generatore esempio ARPAS e statistiche
   storage.rs               cache offline e spazio di lavoro (JSON su disco, scrittura atomica)
-  lib.rs                   comandi Tauri
+  lib.rs                   comandi Tauri (`report`, `catalogo_almanacco`, `csv_esempio_stazione`, ecc.)
 ```
 
 ## Almanacco colturale
