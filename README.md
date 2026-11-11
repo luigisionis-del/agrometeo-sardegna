@@ -25,6 +25,12 @@ export GRADLE_USER_HOME=~/.cache/agrometeo-android/gradle
 npm run android:apk    # → src-tauri/gen/android/app/build/outputs/apk/universal/release/
 ```
 
+Per i box TV a 32 bit (es. TIM Box): `npm run android:apk:tv` (target `armv7`). Su un dispositivo Android
+senza schermo tattile l'app entra da sola in modalità telecomando (`dist/js/tv.js`): frecce per spostare
+il fuoco, OK per attivare o aprire la tastiera su un campo, Indietro per chiudere e tornare alle schede.
+Se il box non ha un launcher, l'app si propone come schermata Home (`MainActivity.kt`) e smette di farlo
+quando ne viene installato uno.
+
 Firma: `~/.config/agrometeo/keystore.properties` (o `AGROMETEO_KEYSTORE_PROPERTIES`), mai nel repository.
 Senza quel file l'APK esce non firmato. Su Android il client HTTP verifica i certificati con le radici
 Mozilla incluse (`webpki-root-certs`): il verificatore di piattaforma richiederebbe un'inizializzazione JNI.

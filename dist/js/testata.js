@@ -3,6 +3,7 @@ import { api } from "./api.js";
 import { el, eta, num, pallino, puntoCardinale } from "./formato.js";
 import { svg } from "./illustrazioni.js";
 import { salvaSpazio, stato } from "./stato.js";
+import { TV } from "./tv.js";
 
 const $ = (id) => document.getElementById(id);
 const COORDINATE = /^\s*(-?\d{1,2}(?:[.,]\d+)?)\s*[,;\s]\s*(-?\d{1,3}(?:[.,]\d+)?)\s*$/;
@@ -72,7 +73,7 @@ function initRicerca() {
   const mostra = (voci) => {
     lista.replaceChildren(
       ...(voci.length
-        ? voci.map((v) => el("li", { role: "option", onclick: () => scegli(v.luogo) }, v.titolo, " ", el("small", {}, v.sotto)))
+        ? voci.map((v) => el("li", { role: "option", tabindex: TV ? 0 : null, onclick: () => scegli(v.luogo) }, v.titolo, " ", el("small", {}, v.sotto)))
         : [el("li", { "aria-disabled": "true" }, "Nessun risultato in Sardegna")]),
     );
     lista.hidden = false;

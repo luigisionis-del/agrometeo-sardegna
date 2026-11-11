@@ -11,6 +11,7 @@ import { aggiornaReport, salvaSpazio, stato, suReport } from "./stato.js";
 import { initStazioni } from "./stazioni.js";
 import { renderSuolo } from "./suolo.js";
 import { initTestata, mostraErrore, renderKpi, renderLuoghi } from "./testata.js";
+import { focusIniziale, initTv } from "./tv.js";
 
 const AUTO_AGGIORNAMENTO_MS = 15 * 60_000;
 let richiesta = 0;
@@ -56,6 +57,7 @@ function renderTutto(r) {
 
 async function avvia() {
   initNavigazione();
+  initTv();
   const [spazio, catalogo] = await Promise.all([api.spazioLavoro(), api.catalogoAlmanacco()]);
   stato.spazio = spazio;
   stato.catalogo = catalogo;
@@ -70,6 +72,7 @@ async function avvia() {
   renderLuoghi();
   centraSuLuogo(stato.spazio.luogo_attivo, false);
   await carica();
+  focusIniziale();
   setInterval(() => carica(), AUTO_AGGIORNAMENTO_MS);
 }
 

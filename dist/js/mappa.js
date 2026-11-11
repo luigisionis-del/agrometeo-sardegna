@@ -3,6 +3,7 @@ import { api } from "./api.js";
 import { el, num, puntoCardinale } from "./formato.js";
 import { salvaSpazio, stato } from "./stato.js";
 import { mostraErrore } from "./testata.js";
+import { TV } from "./tv.js";
 
 const $ = (id) => document.getElementById(id);
 const CENTRO_SARDEGNA = [40.0, 9.0];
@@ -62,7 +63,8 @@ const disegno = { attivo: false, punti: [], linea: null, vertici: null };
 
 export function initMappa(opzioni) {
   impostaLuogo = opzioni.impostaLuogo;
-  mappa = L.map("mappa", { zoomControl: true, attributionControl: true }).setView(CENTRO_SARDEGNA, 8);
+  // col telecomando le frecce servono a spostare il fuoco: la mappa non le cattura per lo scorrimento
+  mappa = L.map("mappa", { zoomControl: true, attributionControl: true, keyboard: !TV }).setView(CENTRO_SARDEGNA, 8);
   mappa.createPane("radar").style.zIndex = 350;
   mappa.createPane("etichette").style.zIndex = 380;
   mappa.getPane("etichette").style.pointerEvents = "none";

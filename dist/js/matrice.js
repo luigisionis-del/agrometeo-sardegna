@@ -1,6 +1,7 @@
 // Matrice decisionale a semaforo (72 ore) con icone SVG descrittive e sintesi delle allerte.
 import { SIMBOLO, dataLocale, el, giorno, ora, pallino, quando } from "./formato.js";
 import { svg } from "./illustrazioni.js";
+import { TV } from "./tv.js";
 
 let report;
 let selezionata;
@@ -21,6 +22,7 @@ export function initMatrice() {
     return true;
   };
   box.addEventListener("mouseover", (e) => mostra(e.target.closest("td")));
+  box.addEventListener("focusin", (e) => mostra(e.target.closest("td")));
   box.addEventListener("click", (e) => {
     const td = e.target.closest("td");
     if (!mostra(td)) return;
@@ -78,6 +80,7 @@ export function renderMatrice(r) {
                 class: `s-${c.livello}${ore[i].endsWith("T00:00:00") && i > 0 ? " mezzanotte" : ""}`,
                 "data-r": ri,
                 "data-i": i,
+                tabindex: TV ? 0 : null,
                 title: `${ora(ore[i])} · ${c.etichetta} — ${c.motivo}`,
               },
               SIMBOLO[c.livello],

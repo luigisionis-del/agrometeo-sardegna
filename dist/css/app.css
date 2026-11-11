@@ -538,3 +538,21 @@ dl.dati-rapidi { margin: 14px 0; }
   body { background: #fff; }
   .pannello { box-shadow: none; }
 }
+
+/* --- modalità telecomando (box TV, vedi js/tv.js) --- */
+/* :focus e non :focus-visible: qui si naviga solo coi tasti e il riquadro deve vedersi sempre */
+.tv :focus {
+  outline: 4px solid var(--cielo);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 8px color-mix(in srgb, var(--cielo) 28%, transparent);
+  scroll-margin: 40px 24px;
+}
+/* la testata non resta fissa (occuperebbe un terzo dello schermo): Indietro riporta in cima alle schede */
+.tv .testata { position: static; }
+.tv .testata :focus { scroll-margin: 0; }
+.tv .scheda-nav:focus { outline-offset: -4px; box-shadow: none; }
+.tv .indice-almanacco { position: static; }
+.tv .indice-almanacco ul { flex-wrap: wrap; overflow-x: visible; }
+.tv .matrice td:focus { outline-offset: 0; box-shadow: none; position: relative; z-index: 1; }
+.tv .risultati li:focus { outline-offset: -4px; box-shadow: none; background: var(--cielo-tenue); }
+.tv .leaflet-control-attribution { pointer-events: none; }
