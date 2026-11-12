@@ -975,9 +975,12 @@ pub struct GruppoOperazioneMese {
     pub colture: Vec<RifColtura>,
 }
 
+/// Operazione del calendario: chiave, titolo, icona e mesi della coltura in cui si svolge.
+type Operazione = (&'static str, &'static str, &'static str, fn(&super::CalendarioColturale) -> &[u32]);
+
 /// Operazioni colturali principali del mese attivo in Sardegna.
 pub fn lavori_mese(mese: u32, schede: &[SchedaColturale]) -> Vec<GruppoOperazioneMese> {
-    let operazioni: &[(&str, &str, &str, fn(&super::CalendarioColturale) -> &[u32])] = &[
+    let operazioni: &[Operazione] = &[
         ("semina", "Semina in campo", "🌱", |c| c.semina),
         ("semenzaio", "Semina in semenzaio", "🪴", |c| c.semenzaio),
         ("trapianto", "Trapianto / impianto", "🌿", |c| c.trapianto),
@@ -1011,6 +1014,7 @@ pub struct AnalisiAlmanacco {
 }
 
 /// Esegue l'analisi completa dell'Almanacco sul report corrente.
+#[allow(clippy::too_many_arguments)] // ingressi già calcolati dal report: raggrupparli non chiarirebbe
 pub fn analizza_report(
     ora_corrente: NaiveDateTime,
     indice_ora: usize,

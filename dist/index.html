@@ -187,16 +187,64 @@
       <div class="pannello banner-infografica" data-svg-id="info-calibrazione" aria-label="Schema esplicativo della calibrazione con stazione pluviometrica"></div>
       <div class="pannello">
         <p class="nota">Importa un CSV con una colonna data/ora e una di precipitazione (separatore <code>;</code> o <code>,</code>,
-          decimali con virgola ammessi) oppure carica il dataset dimostrativo di 30 giorni.</p>
+          decimali con virgola ammessi) oppure prova il confronto con 30 giorni di dati sintetici dimostrativi (stesso tracciato delle
+          esportazioni ARPAS, ma valori inventati: non provengono da ARPAS né da una stazione reale).</p>
         <div class="riga-form">
           <input id="stazione-nome" type="text" placeholder="Nome stazione (es. ARPAS Seulo)">
           <label class="pulsante file">⇪ Carica CSV<input id="stazione-csv" type="file" accept=".csv,.txt,text/csv" hidden></label>
-          <button id="stazione-esempio" type="button" class="pulsante secondario">✦ Prova con esempio ARPAS (30 gg)</button>
+          <button id="stazione-esempio" type="button" class="pulsante secondario">✦ Prova con dati dimostrativi (30 gg)</button>
         </div>
         <div id="confronto" class="confronto"></div>
       </div>
     </section>
   </main>
+
+  <footer class="piede">
+    <span>Dati meteo <b>Open-Meteo.com</b> (CC BY 4.0) · Radar <b>RainViewer</b> · Cartografia © dei rispettivi autori (vedi mappa)</span>
+    <span>Valori orientativi: non sostituiscono il tecnico abilitato.
+      <button id="apri-note-legali" type="button" class="collegamento">Avvertenze, privacy e licenze</button></span>
+  </footer>
+
+  <dialog id="note-legali" class="dialogo">
+    <form method="dialog" class="note-legali">
+      <h2>Prima di usare Agrometeo Sardegna</h2>
+      <section>
+        <h3>Uno strumento di supporto, non una prescrizione</h3>
+        <ul>
+          <li>Semafori, consigli e almanacco sono <b>stime orientative</b> calcolate da modelli meteorologici
+            su griglia: nel tuo appezzamento le condizioni possono essere diverse.</li>
+          <li>Le decisioni su trattamenti, concimazioni, semine e gestione degli animali restano tue.
+            Per la difesa fitosanitaria rivolgiti a un <b>consulente abilitato</b> e usa solo prodotti
+            autorizzati sulla coltura, rispettando etichetta, tempi di carenza e PAN.</li>
+          <li>Le allerte (gelate, stress termico) non sostituiscono i bollettini ufficiali di ARPAS e della
+            Protezione civile.</li>
+          <li>L'app è fornita «così com'è», senza garanzie di esattezza, completezza o disponibilità dei dati.</li>
+        </ul>
+      </section>
+      <section>
+        <h3>Privacy</h3>
+        <ul>
+          <li>Nessun account, nessuna pubblicità, nessuna statistica d'uso o profilazione.</li>
+          <li>Località, parametri e appezzamenti restano solo su questo dispositivo.</li>
+          <li>Per scaricare i dati l'app invia le <b>coordinate</b> della località (e il testo delle ricerche)
+            a Open-Meteo; mappe e radar vengono chiesti a RainViewer e ai server cartografici scelti.
+            Come ogni sito web, questi servizi vedono l'indirizzo IP del dispositivo.</li>
+        </ul>
+      </section>
+      <section>
+        <h3>Fonti e licenze</h3>
+        <ul>
+          <li>Dati meteo e del suolo: Open-Meteo.com, licenza CC BY 4.0; ricerca località: GeoNames (CC BY 4.0).</li>
+          <li>Radar: RainViewer (rainviewer.com). Cartografia: Esri, © OpenStreetMap contributors, OpenTopoMap
+            (CC BY-SA), Sentinel-2 cloudless di EOX (dati Copernicus modificati).</li>
+          <li>Software: licenza MIT. Leaflet (BSD-2-Clause) e Chart.js (MIT).</li>
+        </ul>
+      </section>
+      <div class="azioni">
+        <button value="ok" class="pulsante">Ho capito</button>
+      </div>
+    </form>
+  </dialog>
 
   <dialog id="impostazioni" class="dialogo">
     <form method="dialog" id="form-impostazioni">

@@ -28,7 +28,10 @@ pub const RADAR_MAX_ZOOM: u8 = 7;
 pub const SARDEGNA_LAT: (f64, f64) = (38.8, 41.35);
 pub const SARDEGNA_LON: (f64, f64) = (8.05, 9.9);
 
-pub fn client() -> reqwest::Client {
+/// Client HTTP condiviso, riesportato perché l'app non dipenda direttamente da `reqwest`.
+pub type Client = reqwest::Client;
+
+pub fn client() -> Client {
     let builder = reqwest::Client::builder()
         .user_agent(concat!("AgrometeoSardegna/", env!("CARGO_PKG_VERSION")))
         .timeout(Duration::from_secs(25))

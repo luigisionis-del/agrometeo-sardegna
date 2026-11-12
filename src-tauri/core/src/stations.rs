@@ -141,8 +141,9 @@ pub fn confronta(stazione: &str, oss: &[PioggiaOsservata], modello: &OpenMeteoHi
     }
 }
 
-/// Genera un tracciato CSV dimostrativo in formato ARPAS sugli ultimi 30 giorni
-/// per consentire di testare immediatamente la calibrazione locale.
+/// Genera un tracciato CSV dimostrativo, con il tracciato delle esportazioni ARPAS,
+/// sugli ultimi 30 giorni per provare subito la calibrazione locale.
+/// I valori sono sintetici: non provengono da ARPAS né da alcuna stazione reale.
 pub fn genera_csv_esempio(oggi: NaiveDate) -> String {
     let mut righe = vec!["Data;Precipitazione (mm);Note".to_string()];
     // Serie pluviometrica realistica su 30 giorni con alcuni eventi autunnali/primaverili
@@ -155,7 +156,7 @@ pub fn genera_csv_esempio(oggi: NaiveDate) -> String {
         let giorni_indietro = (campione.len() - i) as i64;
         let data = oggi - chrono::Duration::days(giorni_indietro);
         let mm_it = format!("{mm:.1}").replace('.', ",");
-        righe.push(format!("{};{mm_it};Campione dimostrativo", data.format("%d/%m/%Y")));
+        righe.push(format!("{};{mm_it};Dato sintetico dimostrativo", data.format("%d/%m/%Y")));
     }
     righe.join("\n")
 }

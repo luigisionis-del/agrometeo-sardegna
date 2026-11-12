@@ -2,9 +2,9 @@
 //!
 //! `cargo run --example diagnostica -- [lat] [lon] [germogli_cm]`
 
-use agrometeo_lib::model::Luogo;
-use agrometeo_lib::report::{self, Fonte, ParametriAgro, Payload};
-use agrometeo_lib::fetch;
+use agrometeo_core::model::Luogo;
+use agrometeo_core::report::{self, Fonte, ParametriAgro, Payload};
+use agrometeo_core::fetch;
 use chrono::Utc;
 
 #[tokio::main]

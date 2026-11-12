@@ -28,7 +28,7 @@ export function initStazioni() {
   if (btnEsempio) {
     btnEsempio.addEventListener("click", async () => {
       const campoNome = document.getElementById("stazione-nome");
-      if (!campoNome.value.trim()) campoNome.value = "Pluviometro aziendale ARPAS (esempio 30 gg)";
+      if (!campoNome.value.trim()) campoNome.value = "Esempio dimostrativo (dati sintetici, 30 gg)";
       const csv = await api.csvEsempioStazione();
       await eseguiConfronto(campoNome.value.trim(), csv);
     });

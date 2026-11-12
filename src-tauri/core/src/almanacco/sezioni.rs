@@ -112,6 +112,8 @@ pub const SEZIONI: &[SezioneAlmanacco] = &[
 
 /// Fonti scientifiche, tecniche e normative usate nell'almanacco.
 pub const FONTI: &[&str] = &[
+    "Dati meteorologici e del suolo: Open-Meteo.com (previsione, storico e geocoding), licenza CC BY 4.0. Geocoding basato su GeoNames (CC BY 4.0).",
+    "Radar delle precipitazioni: RainViewer (rainviewer.com), API pubblica per uso personale ed educativo.",
     "Allen R. G., Pereira L. S., Raes D., Smith M. (1998). Crop evapotranspiration. FAO Irrigation and Drainage Paper 56 — coefficienti colturali Kc ed ET0 (Penman-Monteith).",
     "Ayers R. S., Westcot D. W. (1985). Water quality for agriculture. FAO Irrigation and Drainage Paper 29 — soglie di tolleranza alla salinità.",
     "INRA (2018). Alimentation des ruminants — sistemi UFL/PDI per i fabbisogni degli ovini da latte.",

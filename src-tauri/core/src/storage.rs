@@ -23,6 +23,8 @@ pub struct SpazioLavoro {
     /// FeatureCollection GeoJSON degli appezzamenti (vigneto, pascolo, seminativo…).
     pub appezzamenti: serde_json::Value,
     pub layer: ImpostazioniLayer,
+    /// Versione delle avvertenze d'uso accettate al primo avvio (0 = mai viste).
+    pub avvertenze_accettate: u32,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -76,6 +78,7 @@ impl Default for SpazioLavoro {
             parametri: ParametriAgro::default(),
             appezzamenti: serde_json::json!({ "type": "FeatureCollection", "features": [] }),
             layer: ImpostazioniLayer::default(),
+            avvertenze_accettate: 0,
         }
     }
 }
@@ -157,6 +160,7 @@ mod tests {
         let s = a.leggi_spazio();
         assert_eq!(s.parametri.kc, 0.9);
         assert_eq!(s.parametri.ore_matrice, 72);
+        assert_eq!(s.avvertenze_accettate, 0, "le avvertenze vanno mostrate a chi aggiorna");
         // la base scura delle versioni precedenti migra una sola volta a quella chiara
         fs::write(dir.join("spazio_lavoro.json"), r#"{"layer":{"base":"scuro"}}"#).unwrap();
         assert_eq!(a.leggi_spazio().layer.base, "chiaro");

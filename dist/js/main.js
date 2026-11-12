@@ -7,6 +7,7 @@ import { initImpostazioni } from "./impostazioni.js";
 import { applicaLayer, centraSuLuogo, initMappa } from "./mappa.js";
 import { initMatrice, renderAllerte, renderMatrice } from "./matrice.js";
 import { initNavigazione } from "./navigazione.js";
+import { initNoteLegali } from "./note-legali.js";
 import { aggiornaReport, salvaSpazio, stato, suReport } from "./stato.js";
 import { initStazioni } from "./stazioni.js";
 import { renderSuolo } from "./suolo.js";
@@ -69,6 +70,7 @@ async function avvia() {
   initMappa({ impostaLuogo });
   initImpostazioni({ onParametri: () => carica(), onLayer: applicaLayer });
   initStazioni();
+  initNoteLegali();
   renderLuoghi();
   centraSuLuogo(stato.spazio.luogo_attivo, false);
   await carica();

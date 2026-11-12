@@ -1,18 +1,10 @@
 //! Agrometeo Sardegna: backend Tauri.
 //!
-//! Strati: `fetch` (data ingestion) → `report` + `agro` + `almanacco` (calcolo
-//! agronomico, funzioni pure in Rust) → comandi Tauri (questo file) → frontend
-//! (`dist/`, solo rendering e visualizzazione SVG).
+//! La logica di dominio vive nel crate `agrometeo-core` (calcolo agronomico,
+//! almanacco, fetch, cache); qui restano solo i comandi Tauri che il frontend
+//! (`dist/`, solo rendering e visualizzazione SVG) invoca.
 
-pub mod agro;
-pub mod almanacco;
-pub mod error;
-pub mod fetch;
-pub mod illustrazioni;
-pub mod model;
-pub mod report;
-pub mod stations;
-pub mod storage;
+pub use agrometeo_core::{agro, almanacco, error, fetch, illustrazioni, model, report, stations, storage};
 
 use std::sync::Mutex;
 use std::time::{Duration, Instant};
@@ -36,7 +28,7 @@ const VENTO_FRESCO: Duration = Duration::from_secs(20 * 60);
 const MAX_GIORNI_CONFRONTO: i64 = 400;
 
 struct Stato {
-    client: reqwest::Client,
+    client: fetch::Client,
     archivio: Archivio,
     vento: Mutex<Option<(Instant, Vec<PuntoVento>)>>,
 }

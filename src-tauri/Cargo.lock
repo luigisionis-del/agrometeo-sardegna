@@ -9,18 +9,26 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "320119579fcad9c21884f5c4861d16174d0e06250625266f50fe6898340abefa"
 
 [[package]]
-name = "agrometeo-sardegna"
-version = "0.3.0"
+name = "agrometeo-core"
+version = "0.4.0"
 dependencies = [
  "chrono",
  "reqwest",
  "serde",
  "serde_json",
- "tauri",
- "tauri-build",
  "thiserror 2.0.21",
  "tokio",
  "webpki-root-certs",
+]
+
+[[package]]
+name = "agrometeo-sardegna"
+version = "0.4.0"
+dependencies = [
+ "agrometeo-core",
+ "chrono",
+ "tauri",
+ "tauri-build",
 ]
 
 [[package]]

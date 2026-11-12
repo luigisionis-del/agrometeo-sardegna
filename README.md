@@ -11,9 +11,11 @@ npm install            # CLI Tauri + Leaflet/Chart.js
 npm run vendor         # copia Leaflet e Chart.js in dist/vendor (già fatto, serve solo dopo un aggiornamento)
 npm run dev            # app in sviluppo
 npm run build          # pacchetti AppImage + deb in src-tauri/target/release/bundle
-npm test               # test unitari Rust
-cd src-tauri && cargo test -- --ignored                       # test sulle API reali
-cd src-tauri && cargo run --example diagnostica -- 39.79 9.08 15   # report JSON senza interfaccia
+npm test               # test unitari Rust dell'intero workspace
+npm run test:core      # solo il motore: basta la toolchain Rust, niente librerie GTK/WebKit
+npm run lint           # clippy con avvisi trattati come errori (come in CI)
+cd src-tauri && cargo test -p agrometeo-core -- --ignored                       # test sulle API reali
+cd src-tauri && cargo run -p agrometeo-core --example diagnostica -- 39.79 9.08 15   # report JSON senza interfaccia
 ```
 
 ### APK Android
@@ -35,7 +37,19 @@ Firma: `~/.config/agrometeo/keystore.properties` (o `AGROMETEO_KEYSTORE_PROPERTI
 Senza quel file l'APK esce non firmato. Su Android il client HTTP verifica i certificati con le radici
 Mozilla incluse (`webpki-root-certs`): il verificatore di piattaforma richiederebbe un'inizializzazione JNI.
 
+## Integrazione continua e release
+
+- `.github/workflows/ci.yml` (push su `main` e pull request): test e clippy del motore senza Tauri,
+  clippy dell'app desktop, controllo della sintassi dei moduli JavaScript.
+- `.github/workflows/release.yml` (tag `vX.Y.Z`): AppImage, deb e APK universale (arm64 + armv7)
+  allegati alla release GitHub. L'APK viene firmato se nel repository ci sono i segreti
+  `ANDROID_KEYSTORE_BASE64` (il `.jks` in base64), `ANDROID_KEYSTORE_PASSWORD`, `ANDROID_KEY_ALIAS`
+  e `ANDROID_KEY_PASSWORD`; altrimenti esce non firmato.
+
 ## Architettura
+
+Workspace Cargo in `src-tauri/`: il crate `agrometeo-core` (`src-tauri/core/`) contiene tutto il dominio e
+non dipende da Tauri; il crate dell'app (`src-tauri/src/lib.rs`) espone solo i comandi Tauri.
 
 ```
 dist/                      Frontend statico leggero: solo rendering DOM/SVG/Chart.js/Leaflet, tema chiaro
@@ -50,7 +64,9 @@ dist/                      Frontend statico leggero: solo rendering DOM/SVG/Char
   js/grafici.js            Chart.js: suolo, bilancio idrico, temperature, radiazione, GDD
   js/impostazioni.js       parametri agronomici e layer
   js/stazioni.js           confronto con stazione (CSV o dataset dimostrativo ARPAS 30 gg)
-src-tauri/src/             Tutta la logica di dominio, i calcoli, il catalogo e le illustrazioni in Rust
+  js/note-legali.js        avvertenze d'uso, privacy e licenze (al primo avvio e dal piè di pagina)
+src-tauri/src/lib.rs       comandi Tauri (`report`, `catalogo_almanacco`, `csv_esempio_stazione`, ecc.)
+src-tauri/core/src/        agrometeo-core: logica di dominio, calcoli, catalogo e illustrazioni in Rust
   fetch.rs                 Data ingestion: Open-Meteo (previsione, storico, geocoding, vento), RainViewer
   model.rs                 struct dei payload e normalizzazione (lacune interpolate)
   agro/                    Motore agrometeorologico: funzioni pure con test
@@ -77,7 +93,6 @@ src-tauri/src/             Tutta la logica di dominio, i calcoli, il catalogo e 
   report.rs                assemblaggio deterministico del report (inclusa l'analisi dell'Almanacco)
   stations.rs              importatore CSV stazioni, generatore esempio ARPAS e statistiche
   storage.rs               cache offline e spazio di lavoro (JSON su disco, scrittura atomica)
-  lib.rs                   comandi Tauri (`report`, `catalogo_almanacco`, `csv_esempio_stazione`, ecc.)
 ```
 
 ## Almanacco colturale
@@ -102,7 +117,7 @@ Con cache più recente di 15 minuti la rete non viene interrogata.
 | 1 | `geocoding-api.open-meteo.com` | ricerca comuni (filtrata sulla Sardegna) |
 | 2 | RainViewer `weather-maps.json` | radar ultime 2 h, step 10 min |
 | 2 | WMS configurabile | predisposto per mosaico DPC VMI/SRI o ARPAS (disattivato di default) |
-| 3 | CSV stazione | pioggia osservata vs modello (bias, MAE, concordanza giorni piovosi) |
+| 3 | CSV stazione | pioggia osservata vs modello (bias, MAE, concordanza giorni piovosi); l'esempio incluso è sintetico |
 | Base | Esri Light Gray / Dark Gray, OSM, OpenTopoMap, Sentinel-2 cloudless (EOX) | cartografia |
 
 ## Scelte e scostamenti dalla specifica
@@ -129,3 +144,15 @@ Con cache più recente di 15 minuti la rete non viene interrogata.
 - **Grafici**: niente doppi assi; radiazione e temperatura sono grafici separati, la PAR è nel tooltip.
 - **Sentinel-2 NDVI/NDWI**: è disponibile la base Sentinel-2 cloudless; per NDVI servono servizi
   con registrazione, quindi gli appezzamenti GeoJSON (disegno, import, copia) sono già pronti ad agganciarli.
+
+## Licenze, attribuzioni e privacy
+
+- Codice: licenza MIT (`LICENSE`). Informativa privacy: `PRIVACY.md`, riassunta nell'app.
+- Al primo avvio l'app mostra avvertenze d'uso, privacy e licenze (`dist/js/note-legali.js`); restano
+  riapribili dal piè di pagina. Aumentando `VERSIONE_AVVERTENZE` vengono riproposte a tutti.
+- Attribuzioni: Open-Meteo (CC BY 4.0) nel piè di pagina e in «Metodo e fonti», RainViewer e cartografia
+  sulla mappa.
+- **Uso commerciale**: l'API gratuita di Open-Meteo, l'API pubblica di RainViewer e il mosaico
+  Sentinel-2 cloudless 2023 di EOX (CC BY-NC-SA) sono limitati all'uso non commerciale. Prima di
+  vendere l'app o servizi basati su di essa servono un abbonamento Open-Meteo (o un'istanza propria),
+  un accordo con RainViewer o un radar alternativo, e una licenza EOX o un'altra base satellitare.
